@@ -1,12 +1,11 @@
-﻿
-
-namespace QrSortable
+﻿namespace QrSortable
 {
     using CommunityToolkit.Maui;
     using Microsoft.AppCenter;
     using Microsoft.AppCenter.Crashes;
     using Microsoft.Maui.Controls.Compatibility.Hosting;
     using System.Reflection;
+    using Microsoft.AppCenter.Analytics;
 
     public static class MauiProgram
     {
@@ -25,9 +24,13 @@ namespace QrSortable
                     fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
                 });
 
-            // Initialize App Center (outside of handlers configuration)
 #if IOS
-		              AppCenter.Start("ios=1c2e9b8a-3f9b-498c-b519-3ebc4ee3221f",typeof(Crashes));
+            // Initialize AppCenter with both Analytics and Crashes
+            AppCenter.Start("ios=1c2e9b8a-3f9b-498c-b519-3ebc4ee3221f",
+                typeof(Analytics), typeof(Crashes));
+            
+            // Enable verbose logging for debugging
+            AppCenter.LogLevel = LogLevel.Verbose;
 #endif
 
             return builder.Build();
