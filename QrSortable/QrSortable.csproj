@@ -1,30 +1,25 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net9.0-android;net9.0-ios;net9.0-maccatalyst</TargetFrameworks>
-		<TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net9.0-windows10.0.19041.0</TargetFrameworks>
-		<!-- Uncomment to also build the tizen app. You will need to install tizen by following this: https://github.com/Samsung/Tizen.NET -->
-		<!-- <TargetFrameworks>$(TargetFrameworks);net9.0-tizen</TargetFrameworks> -->
-
-		<!-- Note for MacCatalyst:
-		The default runtime is maccatalyst-x64, except in Release config, in which case the default is maccatalyst-x64;maccatalyst-arm64.
-		When specifying both architectures, use the plural <RuntimeIdentifiers> instead of the singular <RuntimeIdentifier>.
-		The Mac App Store will NOT accept apps with ONLY maccatalyst-arm64 indicated;
-		either BOTH runtimes must be indicated or ONLY macatalyst-x64. -->
-		<!-- For example: <RuntimeIdentifiers>maccatalyst-x64;maccatalyst-arm64</RuntimeIdentifiers> -->
-
-		<OutputType>Exe</OutputType>
+		<TargetFrameworks>net9.0-android;net9.0-ios</TargetFrameworks>
 		<RootNamespace>QrSortable</RootNamespace>
 		<UseMaui>true</UseMaui>
+		<MauiVersion>9.0.40</MauiVersion>
+		<OutputType Condition="'$(TargetFramework)' == 'net9.0-ios'">Exe</OutputType>
+		<OutputType Condition="'$(TargetFramework)' == 'net9.0-android'">Exe</OutputType>
+		<OutputType Condition="'$(TargetFramework)' == 'net9.0'">Library</OutputType>
 		<SingleProject>true</SingleProject>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
+		<AndroidSupportedOSVersion>21.0</AndroidSupportedOSVersion>
+		<Configurations>Debug;Release;DebugEmulator;DebugDevice</Configurations>
+		<UsingMauiEssentials>true</UsingMauiEssentials>
 
 		<!-- Display name -->
 		<ApplicationTitle>QrSortable</ApplicationTitle>
 
 		<!-- App Identifier -->
-		<ApplicationId>com.companyname.qrsortable</ApplicationId>
+		<ApplicationId>com.Danfe.QrSortable</ApplicationId>
 
 		<!-- Versions -->
 		<ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
@@ -33,13 +28,56 @@
 		<!-- To develop, package, and publish an app to the Microsoft Store, see: https://aka.ms/MauiTemplateUnpackaged -->
 		<WindowsPackageType>None</WindowsPackageType>
 
-		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">15.0</SupportedOSPlatformVersion>
-		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">15.0</SupportedOSPlatformVersion>
+		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">16.0</SupportedOSPlatformVersion>
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">21.0</SupportedOSPlatformVersion>
-		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
-		<TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
-		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'tizen'">6.5</SupportedOSPlatformVersion>
 	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)' == 'DebugEmulator'">
+		<AndroidSupportedOSVersion>21</AndroidSupportedOSVersion>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)' == 'DebugDevice'">
+		<AndroidSupportedOSVersion>21.0</AndroidSupportedOSVersion>
+	</PropertyGroup>
+
+	<!-- iOS Platform Configuration -->
+	<PropertyGroup Condition="'$(TargetFramework)' == 'net9.0-ios'">
+		<RuntimeIdentifier>ios-arm64</RuntimeIdentifier>
+		<BuildIpa>true</BuildIpa>
+		<MtouchLink>None</MtouchLink>
+		<UseInterpreter>false</UseInterpreter>
+		<EnableCodeSigning>false</EnableCodeSigning>
+		<CodesignEntitlements>Platforms\iOS\Entitlements.plist</CodesignEntitlements>
+		<MtouchUseRegistrar>Static</MtouchUseRegistrar>
+		<ValidateXcodeVersion>false</ValidateXcodeVersion>
+	</PropertyGroup>
+
+	<!-- iOS Release Configuration -->
+	<PropertyGroup Condition="'$(TargetFramework)' == 'net9.0-ios' AND '$(Configuration)' == 'Release'">
+		<PublishTrimmed>true</PublishTrimmed>
+		<TrimMode>partial</TrimMode>
+		<MtouchUseLlvm>false</MtouchUseLlvm>
+		<MtouchEnableBitcode>false</MtouchEnableBitcode>
+		<MtouchNoFastDev>true</MtouchNoFastDev>
+	</PropertyGroup>
+
+	<!-- iOS Debug Configuration -->
+	<PropertyGroup Condition="'$(TargetFramework)' == 'net9.0-ios' AND '$(Configuration)' == 'Debug'">
+		<OptimizePNGs>false</OptimizePNGs>
+		<MtouchLink>None</MtouchLink>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>
+		<RunAOTCompilation>False</RunAOTCompilation>
+		<PublishTrimmed Condition="'$(TargetFramework)' == 'net9.0-android'">False</PublishTrimmed>
+	</PropertyGroup>
+
+	<!-- iOS platform files -->
+	<ItemGroup Condition="'$(TargetFramework)' == 'net9.0-ios'">
+		<BundleResource Include="Platforms\iOS\Info.plist" Link="Info.plist" />
+		<None Include="Platforms\iOS\Entitlements.plist" CopyToOutputDirectory="PreserveNewest" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<!-- App Icon -->
@@ -61,7 +99,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
-		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.8" />
+		<PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="$(MauiVersion)" />
 	</ItemGroup>
 
 </Project>
