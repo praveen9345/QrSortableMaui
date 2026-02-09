@@ -23,55 +23,46 @@
             base.OnStart();
 
 #if IOS
-            // Check if AppCenter is enabled
-            bool isCrashesEnabled = await Crashes.IsEnabledAsync();
-            Console.WriteLine($"AppCenter Crashes Enabled: {isCrashesEnabled}");
-            
-            // Check for previous crashes
-            bool didCrash = await Crashes.HasCrashedInLastSessionAsync();
-            if (didCrash)
-            {
-                Console.WriteLine("App crashed in last session");
-                var crashReport = await Crashes.GetLastSessionCrashReportAsync();
-                Console.WriteLine($"Crash report: {crashReport?.Id}");
-            }
-            
-            // Give AppCenter time to send previous crash reports
-            await Task.Delay(3000); // Increased to 3 seconds
+    Console.WriteLine("=== AppCenter Crash Test ===");
+    
+    // Check if crashes are enabled
+    bool isCrashesEnabled = await Crashes.IsEnabledAsync();
+    Console.WriteLine($"Crashes Enabled: {isCrashesEnabled}");
+    
+    // Check for previous crash
+    bool didCrash = await Crashes.HasCrashedInLastSessionAsync();
+    Console.WriteLine($"Had previous crash: {didCrash}");
+    
+    if (didCrash)
+    {
+        var report = await Crashes.GetLastSessionCrashReportAsync();
+        Console.WriteLine($"Previous crash ID: {report?.Id}");
+    }
+    
+    // Wait for crash upload
+    await Task.Delay(5000);
+    
+    // Initialize app
+    await _appService.OnStartAsync();
+    
+    // Simple crash test - comment out after first successful test
+    bool shouldTestCrash = Preferences.Get("TestCrashDone", false);
+    if (!shouldTestCrash)
+    {
+        Preferences.Set("TestCrashDone", true);
+        Console.WriteLine("CRASHING NOW!");
+        await Task.Delay(1000);
+        throw new Exception("Manual test crash - this should appear in AppCenter");
+    }
+    else
+    {
+        Console.WriteLine("Crash test already done. Check AppCenter portal.");
+    }
+#else
+            await _appService.OnStartAsync();
 #endif
-
-            try
-            {
-                await _appService.OnStartAsync();
-
-#if IOS
-                // Only generate test crash on SECOND launch and in DEBUG mode
-                // Check a preference to see if we've already crashed once
-                bool hasGeneratedTestCrash = Preferences.Get("HasGeneratedTestCrash", false);
-                
-                if (!hasGeneratedTestCrash)
-                {
-                    // Mark that we'll crash on next launch
-                    Preferences.Set("HasGeneratedTestCrash", true);
-                    Console.WriteLine("Test crash will be generated on next app launch");
-                }
-                else
-                {
-                    // This is the second launch - generate the test crash
-                    Console.WriteLine("Generating test crash now...");
-                    await Task.Delay(1000); // Small delay before crash
-                    Crashes.GenerateTestCrash();
-                }
-#endif
-            }
-            catch (Exception ex)
-            {
-#if IOS
-                System.Diagnostics.Debug.WriteLine($"Error in OnStart: {ex.Message}");
-                // Track error in AppCenter
-                Crashes.TrackError(ex);
-#endif
-            }
         }
+
+
     }
 }
